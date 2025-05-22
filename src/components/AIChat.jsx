@@ -19,6 +19,10 @@ const AIChat = () => {
         }
       `;
       
+      console.log('Sending GraphQL request to:', API_URL);
+      console.log('Query:', query);
+      console.log('Variables:', { prompt });
+      
       const response = await fetch(API_URL, {
         method: 'POST',
         headers: {
@@ -30,13 +34,24 @@ const AIChat = () => {
         })
       });
       
-      const data = await response.json();
+      console.log('Response status:', response.status);
       
-      if (data.errors) {
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      console.log('Response data:', data);
+      
+      if (data.errors && data.errors.length > 0) {
         throw new Error(data.errors[0].message);
       }
       
-      setResponse(data.data.generateAIResponse);
+      if (data.data && data.data.generateAIResponse) {
+        setResponse(data.data.generateAIResponse);
+      } else {
+        throw new Error('Unexpected response format');
+      }
     } catch (error) {
       console.error('Error fetching AI response:', error);
       setResponse(`Error: ${error.message}`);
